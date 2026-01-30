@@ -4,61 +4,38 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Além do Bolo – Controle de Estoque</title>
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#020617">
 <script src="https://unpkg.com/lucide@latest"></script>
-
 <style>
-:root{
---bg:#020617;--side:#09090b;--card:#0f172a;
---accent:#3b82f6;--text:#f8fafc;--muted:#94a3b8;
---border:#1e293b;--ok:#10b981;--bad:#ef4444;
-}
-*{box-sizing:border-box;font-family:Inter,system-ui,sans-serif}
-body{margin:0;background:var(--bg);color:var(--text)}
-
-#login{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:999}
-.login-box{background:var(--card);padding:30px;border-radius:16px;border:1px solid var(--border);width:90%;max-width:320px;text-align:center}
-
-header{display:flex;gap:10px;align-items:center;padding:15px;border-bottom:1px solid var(--border)}
-header button{background:none;border:none;color:white}
-
-nav{position:fixed;inset:0 auto 0 0;width:260px;background:var(--side);transform:translateX(-100%);transition:.3s;z-index:999;padding:20px;overflow-y:auto}
-nav.open{transform:translateX(0)}
-.logo{color:var(--accent);font-weight:700;display:flex;gap:8px;align-items:center;margin-bottom:20px}
-.label{font-size:.65rem;color:var(--muted);margin:15px 0 5px}
-.btn{width:100%;padding:10px;border:none;background:none;color:var(--muted);text-align:left;border-radius:8px}
-.btn:hover{background:#1e293b;color:white}
-.btn-add{background:var(--accent);color:white;font-weight:bold}
-
-main{padding:20px}
-.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
-.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center}
-.card b{font-size:1.4rem}
-.ctrl{display:flex;gap:6px;justify-content:center;margin-top:8px}
-.ctrl button{border:none;border-radius:6px;padding:6px 10px;font-size:.7rem;color:white;cursor:pointer}
-.in{background:var(--ok)}
-.out{background:var(--bad)}
-.del{background:#475569}
-.edit{background:#facc15}
-
-/* TABLE */
-table{width:100%;margin-top:20px;border-collapse:collapse;background:var(--card);border-radius:12px;overflow:hidden}
-th,td{padding:10px;font-size:.75rem}
-th{background:#1e293b;color:var(--muted)}
-td{border-bottom:1px solid var(--border)}
-
-.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);align-items:center;justify-content:center;z-index:9999}
-.modal-box{background:var(--card);padding:20px;border-radius:16px;width:95%;max-width:400px}
-input,select,textarea{width:100%;padding:12px;margin-bottom:10px;background:#020617;border:1px solid var(--border);color:white;border-radius:8px}
-
-@media(min-width:768px){
-body{display:flex}
-nav{position:relative;transform:none}
-header{display:none}
-main{flex:1}
-.grid{grid-template-columns:repeat(auto-fill,minmax(100px,1fr))}
-}
+:root{--bg:#020617;--side:#09090b;--card:#0f172a;--accent:#3b82f6;--text:#f8fafc;--muted:#94a3b8;--border:#1e293b;--ok:#10b981;--bad:#ef4444;}
+*{box-sizing:border-box;font-family:Inter,sans-serif;}
+body{margin:0;background:var(--bg);color:var(--text);}
+#login{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:999;}
+.login-box{background:var(--card);padding:30px;border-radius:16px;border:1px solid var(--border);width:90%;max-width:320px;text-align:center;}
+nav{width:260px;background:var(--side);padding:20px;overflow-y:auto;position:fixed;inset:0 auto 0 0;}
+nav .logo{color:var(--accent);font-weight:700;display:flex;gap:8px;align-items:center;margin-bottom:20px;}
+nav .label{font-size:.65rem;color:var(--muted);margin:15px 0 5px;}
+nav .btn{width:100%;padding:10px;border:none;background:none;color:var(--muted);text-align:left;border-radius:8px;margin-bottom:4px;cursor:pointer;}
+nav .btn:hover{background:#1e293b;color:white;}
+nav .btn-add{background:var(--accent);color:white;font-weight:bold;margin-bottom:10px;}
+main{margin-left:260px;padding:20px;}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:12px;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center;}
+.card b{font-size:1.4rem;}
+.ctrl{display:flex;gap:6px;justify-content:center;margin-top:8px;}
+.ctrl button{border:none;border-radius:6px;padding:6px 10px;font-size:.7rem;color:white;cursor:pointer;}
+.in{background:var(--ok);}
+.out{background:var(--bad);}
+.del{background:#475569;}
+.edit{background:#facc15;}
+table{width:100%;margin-top:20px;border-collapse:collapse;background:var(--card);border-radius:12px;overflow:hidden;}
+th,td{padding:10px;font-size:.75rem;}
+th{background:#1e293b;color:var(--muted);}
+td{border-bottom:1px solid var(--border);}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);align-items:center;justify-content:center;z-index:9999;}
+.modal-box{background:var(--card);padding:20px;border-radius:16px;width:95%;max-width:400px;}
+input,select,textarea{width:100%;padding:12px;margin-bottom:10px;background:#020617;border:1px solid var(--border);color:white;border-radius:8px;}
+#sugestao{color:#10b981;font-weight:bold;margin-bottom:10px;}
+@media(max-width:768px){main{margin-left:0;padding:20px;}}
 </style>
 </head>
 <body>
@@ -87,11 +64,6 @@ main{flex:1}
 <button class="btn" onclick="resumo()">Resumen</button>
 </nav>
 
-<header>
-<button onclick="toggleMenu()"><i data-lucide="menu"></i></button>
-<b>Painel</b>
-</header>
-
 <main>
 <h2 id="titulo">Seleccione una área</h2>
 <div id="conteudo"></div>
@@ -104,7 +76,7 @@ main{flex:1}
 <input id="pos" type="number" placeholder="Posición">
 <input id="qtd" type="number" placeholder="Cantidad inicial">
 <textarea id="obs" placeholder="Observaciones"></textarea>
-<div id="sugestao" style="color:#10b981;font-weight:bold;margin-bottom:10px;"></div>
+<div id="sugestao"></div>
 <button class="btn btn-add" onclick="salvar()">Guardar</button>
 <button class="btn" onclick="abrirModal()">Cancelar</button>
 </div>
@@ -115,33 +87,20 @@ const FIREBASE="https://buffet-rio-default-rtdb.firebaseio.com/.json";
 const SENHA="docesalgado";
 let db={itens:{}};
 let state={};
-const mapa={ // mapa inteligente
-'picanha':['C1',3],'mignon':['C1',3],'frango':['C1',5],
-'queijo':['C1',1],'leite':['C1',2],'sorvete':['F1',1],
-'gelo':['F1',2],'peixe':['F1',5],'arroz':['D',1],'feijao':['D',1]
-};
-
-function toggleMenu(){menu.classList.toggle("open")}
-function abrirModal(){modal.style.display=modal.style.display==="flex"?"none":"flex"}
+const mapa={'picanha':['C1',3],'mignon':['C1',3],'frango':['C1',5],'queijo':['C1',1],'leite':['C1',2],'sorvete':['F1',1],'gelo':['F1',2],'peixe':['F1',5],'arroz':['D',1],'feijao':['D',1]};
 
 function entrar(){
-if(senha.value===SENHA){login.style.display="none";lucide.createIcons();sincronizar();popularSelect();}
+if(senha.value===SENHA){
+login.style.display="none";lucide.createIcons();popularSelect();conectarFirebase();}
 else alert("Senha incorreta");
 }
 
 function popularSelect(){
 uni.innerHTML="";
-const locais=['C1','C2','F1','D'];
-locais.forEach(l=>{uni.innerHTML+=`<option value="${l}">${l}</option>`;});
+['C1','C2','F1','D'].forEach(l=>{uni.innerHTML+=`<option value="${l}">${l}</option>`;});
 }
 
-async function sincronizar(){
-setInterval(async()=>{
-const r=await fetch(FIREBASE);
-const d=await r.json();
-if(d){db=d;if(state.uni)fluxo(state.uni,state.tipo,state.max)}
-},2000);
-}
+function abrirModal(){modal.style.display=modal.style.display==="flex"?"none":"flex";if(modal.style.display==="flex"){nome.value="";pos.value="";qtd.value="";obs.value="";sugestao.innerText="";}}
 
 function sugerir(){
 const v=nome.value.toLowerCase();
@@ -149,60 +108,58 @@ if(mapa[v]){uni.value=mapa[v][0];pos.value=mapa[v][1];sugestao.innerText=`Sugeri
 else sugestao.innerText="";
 }
 
+async function conectarFirebase(){
+const r=await fetch(FIREBASE);
+const d=await r.json();
+if(d) db=d;
+setInterval(()=>{fetch(FIREBASE).then(r=>r.json()).then(d=>{if(d){db=d;if(state.uni)flujo(state.uni,state.tipo,state.max)}})},2000);
+}
+
 async function salvar(){
 const k=`${uni.value}-${pos.value}`;
-db.itens[k]={nome:nome.value,qtd:+qtd.value,obs:obs.value};
-await fetch(FIREBASE,{method:"PUT",body:JSON.stringify(db)});
+db.itens[k]={nome:nome.value,qtd:+qtd.value,obs:obs.value||""};
+await fetch(FIREBASE,{method:"PATCH",body:JSON.stringify({itens:{[k]:db.itens[k]}})});
 abrirModal();
 fluxo(uni.value,"",12);
 }
 
 function ajustar(chave,delta){
 db.itens[chave].qtd=Math.max(0,db.itens[chave].qtd+delta);
-salvarDB();
+salvarDB(chave);
 }
 
 function editar(chave){
-const it=db.itens[chave];
-abrirModal();
-nome.value=it.nome;uni.value=chave.split('-')[0];pos.value=chave.split('-')[1];
-qtd.value=it.qtd;obs.value=it.obs;
+const it=db.itens[chave];abrirModal();
+nome.value=it.nome;uni.value=chave.split('-')[0];pos.value=chave.split('-')[1];qtd.value=it.qtd;obs.value=it.obs;
 }
 
 function remover(chave){
-if(confirm("Remover item?")){delete db.itens[chave];salvarDB();}
+if(confirm("Remover item?")){delete db.itens[chave];salvarDB(chave);}
 }
 
-async function salvarDB(){await fetch(FIREBASE,{method:"PUT",body:JSON.stringify(db)});}
+async function salvarDB(chave){await fetch(FIREBASE,{method:"PATCH",body:JSON.stringify({itens:{[chave]:db.itens[chave]||null}})});fluxo(state.uni,state.tipo,state.max);}
 
 function fluxo(uni,tipo,max){
-toggleMenu();state={uni,tipo,max};titulo.innerText=`Gestión ${uni}`;
+state={uni,tipo,max};titulo.innerText=`Gestión ${uni}`;
 let h='<div class="grid">';
 for(let i=1;i<=max;i++){
-const k=`${uni}-${i}`;
-const it=db.itens[k];
-h+=`<div class="card">
-<small>${tipo} ${i}</small>
-<b>${it?it.qtd:0}</b>
-<div style="font-size:.6rem;color:var(--muted)">${it?it.nome:'Vazio'}</div>
-${it?`<div class="ctrl">
+const k=`${uni}-${i}`;const it=db.itens[k];
+h+=`<div class="card"><small>${tipo} ${i}</small><b>${it?it.qtd:0}</b><div style="font-size:.6rem;color:var(--muted)">${it?it.nome:'Vazio'}</div>${it?`<div class="ctrl">
 <button class="in" onclick="ajustar('${k}',1)">+1</button>
 <button class="out" onclick="ajustar('${k}',-1)">-1</button>
 <button class="edit" onclick="editar('${k}')">Editar</button>
 <button class="del" onclick="remover('${k}')">X</button>
-</div>`:''}
-</div>`;
-}
+</div>`:""}</div>`;}
 h+='</div>';conteudo.innerHTML=h;
 }
 
 function resumo(){
 let h='<table><tr><th>Item</th><th>Local</th><th>Qtd</th><th>Obs</th></tr>';
-for(let k in db.itens){const it=db.itens[k];h+=`<tr><td>${it.nome}</td><td>${k}</td><td>${it.qtd}</td><td>${it.obs||''}</td></tr>`;}
+for(let k in db.itens){const it=db.itens[k];h+=`<tr><td>${it.nome}</td><td>${k}</td><td>${it.qtd}</td><td>${it.obs}</td></tr>`;}
 h+='</table>';conteudo.innerHTML=h;
 }
 
-if("serviceWorker"in navigator){navigator.serviceWorker.register("sw.js");}
 </script>
 </body>
 </html>
+
