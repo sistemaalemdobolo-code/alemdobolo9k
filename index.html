@@ -82,83 +82,127 @@ input,select,textarea{width:100%;padding:12px;margin-bottom:10px;background:#020
 </div>
 </div>
 
-<script>
-const FIREBASE="https://buffet-rio-default-rtdb.firebaseio.com/.json";
-const SENHA="docesalgado";
-let db={itens:{}};
-let state={};
-const mapa={'picanha':['C1',3],'mignon':['C1',3],'frango':['C1',5],'queijo':['C1',1],'leite':['C1',2],'sorvete':['F1',1],'gelo':['F1',2],'peixe':['F1',5],'arroz':['D',1],'feijao':['D',1]};
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.1/firebase-app.js";
+import { getDatabase, ref, update, onValue } from "https://www.gstatic.com/firebasejs/10.6.1/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "TU_API_KEY",
+  authDomain: "TU_PROYECTO.firebaseapp.com",
+  databaseURL: "https://TU_PROYECTO-default-rtdb.firebaseio.com",
+  projectId: "TU_PROYECTO",
+  storageBucket: "TU_PROYECTO.appspot.com",
+  messagingSenderId: "XXXX",
+  appId: "XXXX"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+const SENHA = "docesalgado";
+let dbData = {itens:{}};
+let state = {};
+const mapaInteligente = {
+  'picanha':['C1',3],'mignon':['C1',3],'frango':['C1',5],'queijo':['C1',1],'leite':['C1',2],
+  'sorvete':['F1',1],'gelo':['F1',2],'peixe':['F1',5],'arroz':['D',1],'feijao':['D',1]
+};
 
 function entrar(){
-if(senha.value===SENHA){
-login.style.display="none";lucide.createIcons();popularSelect();conectarFirebase();}
-else alert("Senha incorreta");
+  if(senha.value===SENHA){
+    login.style.display="none";
+    lucide.createIcons();
+    popularSelect();
+    conectarFirebase();
+  } else alert("Senha incorreta");
 }
 
 function popularSelect(){
-uni.innerHTML="";
-['C1','C2','F1','D'].forEach(l=>{uni.innerHTML+=`<option value="${l}">${l}</option>`;});
+  uni.innerHTML="";
+  ['C1','C2','F1','D'].forEach(l=>{
+    uni.innerHTML+=`<option value="${l}">${l}</option>`;
+  });
 }
 
-function abrirModal(){modal.style.display=modal.style.display==="flex"?"none":"flex";if(modal.style.display==="flex"){nome.value="";pos.value="";qtd.value="";obs.value="";sugestao.innerText="";}}
+function abrirModal(){
+  modal.style.display = modal.style.display==="flex"?"none":"flex";
+  if(modal.style.display==="flex"){
+    nome.value="";pos.value="";qtd.value="";obs.value="";sugestao.innerText="";
+  }
+}
 
 function sugerir(){
-const v=nome.value.toLowerCase();
-if(mapa[v]){uni.value=mapa[v][0];pos.value=mapa[v][1];sugestao.innerText=`Sugerido: ${mapa[v][0]} pos ${mapa[v][1]}`;}
-else sugestao.innerText="";
+  const v = nome.value.toLowerCase();
+  if(mapaInteligente[v]){
+    uni.value = mapaInteligente[v][0];
+    pos.value = mapaInteligente[v][1];
+    sugestao.innerText=`Sugerido: ${mapaInteligente[v][0]} pos ${mapaInteligente[v][1]}`;
+  } else sugestao.innerText="";
 }
 
-async function conectarFirebase(){
-const r=await fetch(FIREBASE);
-const d=await r.json();
-if(d) db=d;
-setInterval(()=>{fetch(FIREBASE).then(r=>r.json()).then(d=>{if(d){db=d;if(state.uni)flujo(state.uni,state.tipo,state.max)}})},2000);
+function conectarFirebase(){
+  const itensRef = ref(db, 'itens');
+  onValue(itensRef, (snapshot)=>{
+    dbData.itens = snapshot.val() || {};
+    if(state.uni) fluxo(state.uni,state.tipo,state.max);
+  });
 }
 
-async function salvar(){
-const k=`${uni.value}-${pos.value}`;
-db.itens[k]={nome:nome.value,qtd:+qtd.value,obs:obs.value||""};
-await fetch(FIREBASE,{method:"PATCH",body:JSON.stringify({itens:{[k]:db.itens[k]}})});
-abrirModal();
-fluxo(uni.value,"",12);
+function salvar(){
+  const chave = `${uni.value}-${pos.value}`;
+  dbData.itens[chave]={nome:nome.value,qtd:+qtd.value,obs:obs.value||""};
+  update(ref(db,'itens/'+chave), dbData.itens[chave]);
+  abrirModal();
+  fluxo(uni.value,"",12);
 }
 
 function ajustar(chave,delta){
-db.itens[chave].qtd=Math.max(0,db.itens[chave].qtd+delta);
-salvarDB(chave);
+  dbData.itens[chave].qtd=Math.max(0,dbData.itens[chave].qtd+delta);
+  update(ref(db,'itens/'+chave), dbData.itens[chave]);
+  fluxo(state.uni,state.tipo,state.max);
 }
 
 function editar(chave){
-const it=db.itens[chave];abrirModal();
-nome.value=it.nome;uni.value=chave.split('-')[0];pos.value=chave.split('-')[1];qtd.value=it.qtd;obs.value=it.obs;
+  const it=dbData.itens[chave];abrirModal();
+  nome.value=it.nome;uni.value=chave.split('-')[0];pos.value=chave.split('-')[1];qtd.value=it.qtd;obs.value=it.obs;
 }
 
 function remover(chave){
-if(confirm("Remover item?")){delete db.itens[chave];salvarDB(chave);}
+  if(confirm("Remover item?")){
+    delete dbData.itens[chave];
+    update(ref(db,'itens/'+chave), null);
+    fluxo(state.uni,state.tipo,state.max);
+  }
 }
 
-async function salvarDB(chave){await fetch(FIREBASE,{method:"PATCH",body:JSON.stringify({itens:{[chave]:db.itens[chave]||null}})});fluxo(state.uni,state.tipo,state.max);}
-
 function fluxo(uni,tipo,max){
-state={uni,tipo,max};titulo.innerText=`Gestión ${uni}`;
-let h='<div class="grid">';
-for(let i=1;i<=max;i++){
-const k=`${uni}-${i}`;const it=db.itens[k];
-h+=`<div class="card"><small>${tipo} ${i}</small><b>${it?it.qtd:0}</b><div style="font-size:.6rem;color:var(--muted)">${it?it.nome:'Vazio'}</div>${it?`<div class="ctrl">
-<button class="in" onclick="ajustar('${k}',1)">+1</button>
-<button class="out" onclick="ajustar('${k}',-1)">-1</button>
-<button class="edit" onclick="editar('${k}')">Editar</button>
-<button class="del" onclick="remover('${k}')">X</button>
-</div>`:""}</div>`;}
-h+='</div>';conteudo.innerHTML=h;
+  state={uni,tipo,max};
+  titulo.innerText=`Gestión ${uni}`;
+  let h='<div class="grid">';
+  for(let i=1;i<=max;i++){
+    const k=`${uni}-${i}`;
+    const it=dbData.itens[k];
+    h+=`<div class="card"><small>${tipo} ${i}</small><b>${it?it.qtd:0}</b>
+    <div style="font-size:.6rem;color:var(--muted)">${it?it.nome:'Vazio'}</div>
+    ${it?`<div class="ctrl">
+      <button class="in" onclick="ajustar('${k}',1)">+1</button>
+      <button class="out" onclick="ajustar('${k}',-1)">-1</button>
+      <button class="edit" onclick="editar('${k}')">Editar</button>
+      <button class="del" onclick="remover('${k}')">X</button>
+    </div>`:""}</div>`;
+  }
+  h+='</div>';
+  conteudo.innerHTML=h;
 }
 
 function resumo(){
-let h='<table><tr><th>Item</th><th>Local</th><th>Qtd</th><th>Obs</th></tr>';
-for(let k in db.itens){const it=db.itens[k];h+=`<tr><td>${it.nome}</td><td>${k}</td><td>${it.qtd}</td><td>${it.obs}</td></tr>`;}
-h+='</table>';conteudo.innerHTML=h;
+  let h='<table><tr><th>Item</th><th>Local</th><th>Qtd</th><th>Obs</th></tr>';
+  for(let k in dbData.itens){
+    const it=dbData.itens[k];
+    h+=`<tr><td>${it.nome}</td><td>${k}</td><td>${it.qtd}</td><td>${it.obs}</td></tr>`;
+  }
+  h+='</table>';conteudo.innerHTML=h;
 }
-
 </script>
 </body>
 </html>
