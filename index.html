@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Além do Bolo – Controle de Estoque</title>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#020617">
+
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<style>
+:root{
+--bg:#020617;--side:#09090b;--card:#0f172a;
+--accent:#3b82f6;--text:#f8fafc;--muted:#94a3b8;
+--border:#1e293b;--ok:#10b981;--bad:#ef4444;
+}
+*{box-sizing:border-box;font-family:Inter,system-ui,sans-serif}
+body{margin:0;background:var(--bg);color:var(--text)}
+
+/* LOGIN */
+#login{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:999}
+.login-box{background:var(--card);padding:30px;border-radius:16px;border:1px solid var(--border);width:90%;max-width:320px;text-align:center}
+
+/* HEADER */
+header{display:flex;gap:10px;align-items:center;padding:15px;border-bottom:1px solid var(--border)}
+header button{background:none;border:none;color:white}
+
+/* SIDEBAR */
+nav{position:fixed;inset:0 auto 0 0;width:260px;background:var(--side);
+transform:translateX(-100%);transition:.3s;z-index:999;padding:20px;overflow-y:auto}
+nav.open{transform:translateX(0)}
+.logo{color:var(--accent);font-weight:700;display:flex;gap:8px;align-items:center;margin-bottom:20px}
+.label{font-size:.65rem;color:var(--muted);margin:15px 0 5px}
+.btn{width:100%;padding:10px;border:none;background:none;color:var(--muted);text-align:left;border-radius:8px}
+.btn:hover{background:#1e293b;color:white}
+.btn-add{background:var(--accent);color:white;font-weight:bold}
+
+/* MAIN */
+main{padding:20px}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center}
+.card b{font-size:1.4rem}
+
+/* CONTROLES */
+.ctrl{display:flex;gap:6px;justify-content:center;margin-top:8px}
+.ctrl button{
+border:none;border-radius:6px;padding:6px 10px;
+font-size:.7rem;color:white;cursor:pointer
+}
+.in{background:var(--ok)}
+.out{background:var(--bad)}
+.del{background:#475569}
+
+/* TABLE */
+table{width:100%;margin-top:20px;border-collapse:collapse;background:var(--card);border-radius:12px;overflow:hidden}
+th,td{padding:10px;font-size:.75rem}
+th{background:#1e293b;color:var(--muted)}
+td{border-bottom:1px solid var(--border)}
+
+/* MODAL */
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);align-items:center;justify-content:center;z-index:9999}
+.modal-box{background:var(--card);padding:20px;border-radius:16px;width:95%;max-width:400px}
+input,select,textarea{
+width:100%;padding:12px;margin-bottom:10px;
+background:#020617;border:1px solid var(--border);color:white;border-radius:8px}
+
+/* DESKTOP */
+@media(min-width:768px){
+body{display:flex}
+nav{position:relative;transform:none}
+header{display:none}
+main{flex:1}
+.grid{grid-template-columns:repeat(auto-fill,minmax(100px,1fr))}
+}
+</style>
+</head>
+
+<body>
+
+<!-- LOGIN -->
+<div id="login">
+<div class="login-box">
+<h2 style="color:var(--accent)">Além do Bolo</h2>
+<input id="senha" type="password" placeholder="Senha da equipe">
+<button class="btn btn-add" onclick="entrar()">Entrar</button>
+</div>
+</div>
+
+<!-- SIDEBAR -->
+<nav id="menu">
+<div class="logo"><i data-lucide="chef-hat"></i> Além do Bolo</div>
+<button class="btn btn-add" onclick="abrirModal()">+ Novo Item</button>
+
+<div class="label">Refrigeração</div>
+<button class="btn" onclick="fluxo('C1','Estante',12)">Câmara 1</button>
+<button class="btn" onclick="fluxo('C2','Estante',12)">Câmara 2</button>
+<button class="btn" onclick="fluxo('F1','Gaveta',10)">Freezer 1</button>
+
+<div class="label">Almoxarifado</div>
+<button class="btn" onclick="fluxo('D','P',9)">Despensa</button>
+
+<div class="label">Relatórios</div>
+<button class="btn" onclick="resumo()">Resumo Geral</button>
+</nav>
+
+<!-- HEADER -->
+<header>
+<button onclick="toggleMenu()"><i data-lucide="menu"></i></button>
+<b>Painel</b>
+</header>
+
+<!-- MAIN -->
+<main>
+<h2 id="titulo">Selecione uma área</h2>
+<div id="conteudo"></div>
+</main>
+
+<!-- MODAL NOVO ITEM -->
+<div class="modal" id="modal">
+<div class="modal-box">
+<input id="nome" placeholder="Item">
+<select id="uni">
+<option value="C1">Câmara 1</option>
+<option value="C2">Câmara 2</option>
+<option value="F1">Freezer 1</option>
+<option value="D">Despensa</option>
+</select>
+<input id="pos" type="number" placeholder="Posição">
+<input id="qtd" type="number" placeholder="Quantidade inicial">
+<textarea id="obs" placeholder="Observações"></textarea>
+<button class="btn btn-add" onclick="salvar()">Salvar</button>
+<button class="btn" onclick="abrirModal()">Cancelar</button>
+</div>
+</div>
+
+<script>
+const FIREBASE="https://buffet-rio-default-rtdb.firebaseio.com/.json";
+const SENHA="docesalgado";
+let db={itens:{}};
+let state={};
+
+function toggleMenu(){menu.classList.toggle("open")}
+function abrirModal(){modal.style.display=modal.style.display==="flex"?"none":"flex"}
+
+function entrar(){
+if(senha.value===SENHA){
+login.style.display="none";
+lucide.createIcons();
+sincronizar();
+}else alert("Senha incorreta");
+}
+
+async function sincronizar(){
+setInterval(async()=>{
+const r=await fetch(FIREBASE);
+const d=await r.json();
+if(d){db=d;if(state.uni)fluxo(state.uni,state.tipo,state.max)}
+},2000);
+}
+
+async function salvar(){
+const k=`${uni.value}-${pos.value}`;
+db.itens[k]={nome:nome.value,qtd:+qtd.value,obs:obs.value};
+await fetch(FIREBASE,{method:"PUT",body:JSON.stringify(db)});
+abrirModal();
+fluxo(uni.value,"",12);
+}
+
+function ajustar(chave,delta){
+db.itens[chave].qtd=Math.max(0,db.itens[chave].qtd+delta);
+salvarDB();
+}
+
+function remover(chave){
+if(confirm("Remover item?")){
+delete db.itens[chave];
+salvarDB();
+}
+}
+
+async function salvarDB(){
+await fetch(FIREBASE,{method:"PUT",body:JSON.stringify(db)});
+}
+
+function fluxo(uni,tipo,max){
+toggleMenu();
+state={uni,tipo,max};
+titulo.innerText=`Gestão ${uni}`;
+let h='<div class="grid">';
+for(let i=1;i<=max;i++){
+const k=`${uni}-${i}`;
+const it=db.itens[k];
+h+=`<div class="card">
+<small>${tipo} ${i}</small>
+<b>${it?it.qtd:0}</b>
+<div style="font-size:.6rem;color:var(--muted)">${it?it.nome:'Vazio'}</div>
+${it?`
+<div class="ctrl">
+<button class="in" onclick="ajustar('${k}',1)">+1</button>
+<button class="out" onclick="ajustar('${k}',-1)">-1</button>
+<button class="del" onclick="remover('${k}')">X</button>
+</div>`:''}
+</div>`;
+}
+h+='</div>';
+conteudo.innerHTML=h;
+}
+
+function resumo(){
+let h='<table><tr><th>Item</th><th>Local</th><th>Qtd</th></tr>';
+for(let k in db.itens){
+const it=db.itens[k];
+h+=`<tr><td>${it.nome}</td><td>${k}</td><td>${it.qtd}</td></tr>`;
+}
+h+='</table>';
+conteudo.innerHTML=h;
+}
+
+if("serviceWorker"in navigator){
+navigator.serviceWorker.register("sw.js");
+}
+</script>
+</body>
+</html>
